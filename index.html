@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/105/three.min.js"></script>
+
+    <style>
+        body{
+            margin: 0;
+        }
+        /* #myCanvas{
+            width: 100vw;
+            height: 100vh;
+        } */
+    </style>
+
+    <script>
+        //ページの読み込みを待つ
+        window.addEventListener('load', init);
+        function init(){
+
+            //サイズを指定
+            const width = window.parent.screen.width;
+            const height = window.parent.screen.height * 0.8;
+
+            let rot = 0;
+
+            //レンダリング処理
+            const renderer = new THREE.WebGLRenderer({
+                canvas: document.querySelector('#myCanvas')
+            });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(width, height);
+
+            //シーンを作成(シーンとは３D空間のこと,3Dオブジェクトそのものや光源の置き場)
+            const scene = new THREE.Scene();
+
+            //カメラの作成
+            /**
+             * 画角
+             * アスペクト比
+             * 描画開始距離
+             * 描画終了距離
+             * 
+            */
+           const camera = new THREE.PerspectiveCamera(45, width/height, 1, 10000);//(画角, アスペクト比, 描画開始距離, 描画終了距離)
+           camera.position.set(0, 150, +1000);//カメラのセット位置（x, y, z）
+           camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+           //コンテナーを作成
+           const container = new THREE.Object3D();
+           scene.add(container);
+           //地球の画像読み込み
+           const texture = new THREE.TextureLoader().load('images/earthmap1k.jpg');
+            //マテリアルを作成
+           const material = new THREE.MeshStandardMaterial({ map: texture, side:THREE.DoubleSide });
+           //球体の形状を作成
+           const geometry = new THREE.SphereGeometry(300, 30, 30);//球体
+           //メッシュを作成
+           const sphere = new THREE.Mesh(geometry, material);
+           //シーンに追加
+           scene.add(sphere);
+
+           //平行光源
+           const directionalLight = new THREE.DirectionalLight(0xffffff);
+           directionalLight.position.set(1, 1, 1);
+           scene.add(directionalLight);
+
+           //星屑を作成
+           createStarField();
+
+           function createStarField(){
+               //形状データを作成
+               const geometry = new THREE.Geometry();
+               for(let i = 0; i < 1000; i++){
+                   geometry.vertices.push(
+                       new THREE.Vector3(
+                           3000 * (Math.random() - 0.5),
+                           3000 * (Math.random() - 0.5),
+                           3000 * (Math.random() - 0.5),
+                       )
+                   );
+               }
+               //マテリアルを作成
+               const material = new THREE.PointsMaterial({
+                   size:10,
+                   color:0xffffff
+               });
+               //物体を作成
+               const mesh = new THREE.Points(geometry, material);
+               scene.add(mesh);
+           }
+
+           //初回実行
+           tick();
+           //マイフレームごとに実行されるループイベント
+           function tick(){
+               rot += 0.5;//マイフレームごと0.5度づつ足していく
+               //ラジアンに変換する
+               const radian = (rot * Math.PI) / 180;
+               //角度に応じてカメラの位置を設定
+               camera.position.x = 1000 * Math.sin(radian);
+               camera.position.z = 1000 * Math.cos(radian);
+               //原点方向を向ける
+               camera.lookAt(new THREE.Vector3(0, 0, 0));
+               requestAnimationFrame(tick);
+
+
+               //レンダリング
+               renderer.render(scene, camera);//レンダリング（更新処理）
+           }
+        }
+    </script>
+</head>
+<body>
+    <canvas id="myCanvas"></canvas>
+    
+</body>
+</html>
